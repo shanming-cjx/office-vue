@@ -1,4 +1,5 @@
 <template>
+  <!-- 行数据id存在则dataForm.id>0;行数据id不存在则dataForm.id=0;0为false，不存在则新增，反之为修改 -->
 	<el-dialog
 		:title="!dataForm.id ? '新增' : '修改'"
 		v-if="isAuth(['ROOT', 'USER:INSERT', 'USER:UPDATE'])"
@@ -82,7 +83,7 @@
 <script>
 import dayjs from 'dayjs';
 export default {
-	data: function() {
+	data() {
 		return {
 			visible: false,
 			dataForm: {
@@ -121,35 +122,71 @@ export default {
 		};
 	},
 	methods: {
-		init: function(id) {
-			let that = this;
-			that.dataForm.id = id || 0;
-			that.visible = true;
-			that.$nextTick(() => {
-				that.$refs['dataForm'].resetFields();
-				that.$http('role/searchAllRole', 'GET', null, true, function(resp) {
-					that.roleList = resp.list;
+		init(id) {//获取行数据的id
+			this.dataForm.id = id || 0;//若行数据的id存在，赋值给表单的id；否则赋0
+			this.visible = true;
+			this.$nextTick(() => {
+				this.$refs['dataForm'].resetFields();
+				this.$http('role/searchAllRole', 'GET', null, true, resp => {
+					this.roleList = resp.list;
 				});
-				that.$http('dept/searchAllDept', 'GET', null, true, function(resp) {
-					that.deptList = resp.list;
+				this.$http('dept/searchAllDept', 'GET', null, true, resp => {
+					this.deptList = resp.list;
 				});
-				if (that.dataForm.id) {
-					that.$http('user/searchById', 'POST', { userId: id }, true, function(resp) {
-						that.dataForm.username = resp.username;
-						that.dataForm.password = resp.password;
-						that.dataForm.name = resp.name;
-						that.dataForm.sex = resp.sex;
-						that.dataForm.tel = resp.tel;
-						that.dataForm.email = resp.email;
-						that.dataForm.hiredate = resp.hiredate;
-						that.dataForm.role = JSON.parse(resp.role);
-						that.dataForm.deptId = resp.deptId;
-						that.dataForm.status = resp.status;
+				if (this.dataForm.id) {
+					this.$http('user/searchById', 'POST', { userId: id }, true, resp => {
+						this.dataForm.username = resp.username;
+						this.dataForm.password = resp.password;
+						this.dataForm.name = resp.name;
+						this.dataForm.sex = resp.sex;
+						this.dataForm.tel = resp.tel;
+						this.dataForm.email = resp.email;
+						this.dataForm.hiredate = resp.hiredate;
+						this.dataForm.role = JSON.parse(resp.role);
+						this.dataForm.deptId = resp.deptId;
+						this.dataForm.status = resp.status;
 					});
 				}
 			});
 		},
-		
+    dataFormSubmit() {
+      this.$refs["dataForm"].validate(valid => {
+        if(valid){
+          let data = {
+            userId: this.dataForm.id,
+            username: this.dataForm.username,
+            password: this.dataForm.password,
+            name: this.dataForm.name,
+            sex: this.dataForm.sex,
+            tel: this.dataForm.tel,
+            email: this.dataForm.email,
+            hiredate: dayjs(this.dataForm.hiredate).format('YYYY-MM-DD'),//转选择器对选为字符串
+            role: this.dataForm.role,
+            deptId: this.dataForm.deptId,
+            status: this.dataForm.status
+          };
+          //模板字符串用``不是'', 变量使用${}。
+          this.$http(`user/${!this.dataForm.id?'insert':'update'}`,"POST",data,true,resp => {
+            if(resp.rows==1){
+              this.$message({
+                message: '操作成功',
+                type: 'success',
+                duration: 1200
+              });
+              this.visible=false
+              this.$emit('refreshDataList');//调用其他页面函数
+            }
+            else{
+              this.$message({
+                message: '操作失败',
+                type: 'error',
+                duration: 1200
+              });
+            }
+          });
+        }
+      })
+    },
 	}
 };
 </script>

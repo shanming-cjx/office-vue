@@ -146,13 +146,15 @@
 			:total="totalCount"
 			layout="total, sizes, prev, pager, next, jumper"
 		></el-pagination>
+    <!--  refreshDataList在add-or-update的页面定义，调loadDataList回调函数  -->
+    <!--  ref="addOrUpdate" 为注册组件名  -->
 		<add-or-update v-if="addOrUpdateVisible" ref="addOrUpdate" @refreshDataList="loadDataList"></add-or-update>
 		<dimiss v-if="dimissVisible" ref="dimiss" @refreshDataList="loadDataList"></dimiss>
 	</div>
 </template>
 
 <script>
-import AddOrUpdate from './user-add-or-update.vue';
+import AddOrUpdate from '../components/user-add-or-update.vue';
 import Dimiss from './dimiss.vue';
 export default {
 	components: {
@@ -176,7 +178,7 @@ export default {
 			totalCount: 0,//总条数
 			dataListLoading: false,//加载动画
 			dataListSelections: [],//多选
-			addOrUpdateVisible: false,//新增修改弹窗
+			addOrUpdateVisible: false,//新增修改弹窗，对应弹窗页面的v-model="visible"。
 			dimissVisible: false,//离职弹窗
 			dataRule: {
 				name: [{ required: false, pattern: '^[\u4e00-\u9fa5]{1,10}$', message: '姓名格式错误' }]
@@ -237,6 +239,12 @@ export default {
         }else {
           return false;
         }
+      });
+    },
+    addHandle() {
+      this.addOrUpdateVisible = true;
+      this.$nextTick(() => {//异步延迟到下一个dom
+        this.$refs.addOrUpdate.init();
       });
     },
     //查询下拉框角色列表
