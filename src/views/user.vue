@@ -241,10 +241,18 @@ export default {
         }
       });
     },
+    //添加用户，打开弹窗
     addHandle() {
       this.addOrUpdateVisible = true;
       this.$nextTick(() => {//异步延迟到下一个dom
         this.$refs.addOrUpdate.init();
+      });
+    },
+    //修改用户信息，打开弹窗
+    updateHandle(id) {
+      this.addOrUpdateVisible = true;
+      this.$nextTick(() => {//异步延迟到下一个dom
+        this.$refs.addOrUpdate.init(id);
       });
     },
     //查询下拉框角色列表

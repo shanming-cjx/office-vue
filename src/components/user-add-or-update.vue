@@ -126,7 +126,7 @@ export default {
 			this.dataForm.id = id || 0;//若行数据的id存在，赋值给表单的id；否则赋0
 			this.visible = true;
 			this.$nextTick(() => {
-				this.$refs['dataForm'].resetFields();
+				this.$refs['dataForm'].resetFields();//重置验证
 				this.$http('role/searchAllRole', 'GET', null, true, resp => {
 					this.roleList = resp.list;
 				});
