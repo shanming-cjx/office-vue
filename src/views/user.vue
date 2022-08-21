@@ -272,7 +272,45 @@ export default {
     //多选
 		selectionChangeHandle(val) {
 			this.dataListSelections = val;
-		}
+		},
+    //删除
+    deleteHandle(id){
+      let ids = id
+          ? [id]
+          : this.dataListSelections.map(item => {
+            return item.id;
+          });
+      if (ids.length == 0) {
+        this.$message({
+          message: '没有选中记录',
+          type: 'warning',
+          duration: 1200
+        });
+      } else {
+        this.$confirm('确定要删除选中的记录？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.$http('user/deleteUserByIds', 'POST', { ids: ids }, true, resp => {
+            if (resp.rows > 0) {
+              this.$message({
+                message: '操作成功',
+                type: 'success',
+                duration: 1200
+              });
+              this.loadDataList();
+            } else {
+              this.$message({
+                message: '未能删除记录',
+                type: 'warning',
+                duration: 1200
+              });
+            }
+          });
+        });
+      }
+    },
 	},
 	created() {
 		this.loadRoleList();//加载搜索栏的下拉框角色数据
