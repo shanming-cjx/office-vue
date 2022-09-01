@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<el-form :inline="true" :model="dataForm" :rules="dataRule" ref="dataForm" class="form">
+		<el-form :inline="true" :model="dataForm" :rules="dataRule" ref="dataForm" class="form"><!--  搜索栏  -->
 			<el-form-item prop="name">
 				<el-select
 					v-model="dataForm.name"
@@ -32,7 +32,7 @@
 				</el-radio-group>
 			</el-form-item>
 		</el-form>
-		<div class="gantt" ref="gantt" v-show="mode == 'gantt'">
+		<div class="gantt" ref="gantt" v-show="mode == 'gantt'"><!--  甘特图  -->
 			<div class="row">
 				<div class="cell-time"></div>
 				<div class="cell-time" v-for="one in time">
@@ -61,7 +61,7 @@
 			:total="totalCount"
 			layout="total, sizes, prev, pager, next, jumper"
 		/>
-
+    <!--  周日历  -->
 		<div class="calendar" v-show="mode == 'calendar'">
 			<div class="row">
 				<div class="cell">时间</div>
@@ -115,26 +115,11 @@ export default {
 		return {
 			time: [
 				'08:30',
-				'09:00',
-				'09:30',
-				'10:00',
-				'10:30',
-				'11:00',
-				'11:30',
-				'12:00',
-				'12:30',
-				'13:00',
-				'13:30',
-				'14:00',
-				'14:30',
-				'15:00',
-				'15:30',
-				'16:00',
-				'16:30',
-				'17:00',
-				'17:30',
-				'18:00',
-				'18:30'
+        '09:00', '09:30', '10:00', '10:30',
+        '11:00', '11:30', '12:00', '12:30',
+				'13:00', '13:30', '14:00', '14:30',
+				'15:00', '15:30', '16:00', '16:30',
+				'17:00', '17:30', '18:00', '18:30'
 			],
 			gantt: {
 				meetingRoom: [],
@@ -161,12 +146,79 @@ export default {
 		};
 	},
 	methods: {
-		backHandle: function() {
+    loadDataList(){
+      this.dataListLoading = true;
+      let data = {
+        name: this.dataForm.name,
+        mold: this.dataForm.mold,
+        page: this.pageIndex,
+        length: this.pageSize
+      };
+      if (this.dataForm.date == null || this.dataForm.date == '') {
+        data.date = dayjs(new Date()).format('YYYY-MM-DD');//如果没有选择日期，则按当天的日期
+      } else {
+        data.date = dayjs(this.dataForm.date).format('YYYY-MM-DD');//将日期控件转特定格式
+      }
+
+      this.$http('meeting/searchOfflineMeetingByPage', 'POST', data, true, resp =>{
+        let page = resp.page;
+        let temp = [];
+        for (let room of page.list) {//list里封装每个会议室的数据
+          let json = {};
+          json.name = room.name;
+          json.meeting = {};
+          if (room.hasOwnProperty('meeting')) {
+            for (let meeting of room.meeting) {
+              let color;
+              if (meeting.status == 1) {
+                color = 'yellow';
+              } else if (meeting.status == 3) {
+                color = 'blue';
+              } else if (meeting.status == 4) {
+                color = 'pink';
+              } else if (meeting.status == 5) {
+                color = 'gray';
+              }
+              json.meeting[meeting.start] = meeting.time + '#' + color;
+            }
+          }
+          temp.push(json);
+        }
+        this.gantt.meetingRoom = temp;
+        this.totalCount = page.totalCount;
+        this.dataListLoading = false;
+      });
+    },
+
+    searchHandle(){
+      if (this.dataForm.name == null || this.dataForm.name == '') {
+        if (this.pageIndex != 1) {
+          this.pageIndex = 1;
+        }
+        this.loadDataList();
+        this.mode = 'gantt';
+      }
+    },
+
+    changeHandle(){
+      this.searchHandle();
+    },
+
+/*		backHandle: function() {
 			let that = this;
 			that.mode = 'gantt';
-		},
+		},*/
+    sizeChangeHandle(val) {
+      this.pageSize = val;
+      this.pageIndex = 1;
+      this.loadDataList();
+    },
+    currentChangeHandle(val) {
+      this.pageIndex = val;
+      this.loadDataList();
+    },
 	},
-	mounted: function() {
+	mounted() {
 		let that=this
 		//根据实际情况设置甘特图每个单元格应该有的宽度
 		let rowWidth = that.$refs['gantt'].offsetWidth - 1;
@@ -180,7 +232,7 @@ export default {
 			that.gantt.cellWidth = cellWidth;
 		})
 	},
-	created: function() {
+	created() {
 		
 		let that = this;	
 		//加载会议室列表
