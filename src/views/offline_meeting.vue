@@ -107,7 +107,7 @@
 <script>
 import SvgIcon from '../components/SvgIcon.vue';
 import dayjs from 'dayjs';
-import Add from './offline_meeting-add.vue';
+import Add from '../components/offline_meeting-add.vue';
 import Info from './offline_meeting-info.vue';
 export default {
 	components: { SvgIcon, Add, Info },
@@ -190,7 +190,7 @@ export default {
       });
     },
 
-    searchHandle(){
+    searchHandle(){//查询线下会议
       if (this.dataForm.name == null || this.dataForm.name == '') {
         if (this.pageIndex != 1) {
           this.pageIndex = 1;
@@ -200,7 +200,7 @@ export default {
       }
     },
 
-    changeHandle(){
+    changeHandle(){//选择我的会议或全部会议
       this.searchHandle();
     },
 
@@ -208,6 +208,14 @@ export default {
 			let that = this;
 			that.mode = 'gantt';
 		},*/
+    addHandle() {//新增线下会议申请
+      this.addVisible = true;
+      this.$nextTick(() => {
+        this.$refs.add.init();
+      });
+
+    },
+
     sizeChangeHandle(val) {
       this.pageSize = val;
       this.pageIndex = 1;
