@@ -62,7 +62,7 @@
 			layout="total, sizes, prev, pager, next, jumper"
 		/>
     <!--  周日历  -->
-		<div class="calendar" v-show="mode == 'calendar'">
+		<div class="calendar" v-show="mode == 'calendar'"><!--  v-show条件  -->
 			<div class="row">
 				<div class="cell">时间</div>
 				<div class="cell" v-for="one in calendar.days">{{ one.date }}（{{ one.day }}）</div>
@@ -99,8 +99,8 @@
 				</div>
 			</div>
 		</div>
-		<add v-if="addVisible" ref="add" @refresh="refresh"></add>
-		<info v-if="infoVisble" ref="info"></info>
+		<add v-if="addVisible" ref="add" @refresh="refresh"></add><!--  申请线下会议弹窗  -->
+		<info v-if="infoVisble" ref="info"></info><!--  周日历卡片的具体会议信息  -->
 	</div>
 </template>
 
@@ -197,16 +197,81 @@ export default {
         }
         this.loadDataList();
         this.mode = 'gantt';
+      }else {
+        this.$refs["dataForm"].validate(valid=>{
+          if(valid){
+            this.$refs["dataForm"].clearValidate()
+            let data={
+              name:this.dataForm.name,
+              mold:this.dataForm.mold
+            }
+            if(this.dataForm.date!=null&&this.dataForm.date!=""){
+              data.date=dayjs(this.dataForm.date).format("YYYY-MM-DD")
+            }
+            this.$http("meeting/searchOfflineMeetingInWeek","POST",data,true,resp =>{
+              let map={}
+              for(let one of resp.list){
+                map[`${one.date}#${one.start}`]=one
+              }
+              this.calendar.map=map
+              this.calendar.days=resp.days
+              this.mode="calendar"
+            })
+
+          }
+          else{
+            return false
+          }
+        })
       }
+    },
+
+    infoHandle(id,status) {
+      this.infoVisble = true;
+      this.$nextTick(() => {
+        this.$refs.info.init(id, status);
+      });
+    },
+
+    deleteHandle(key) {
+      this.$confirm('是否删除该会议?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(()=>{
+        let json=this.calendar.map[key]
+        let data={
+          id:json.id,
+          uuid:json.uuid,
+          instanceId:json.instanceId,
+          reason:"删除会议"
+        }
+        this.$http("meeting/deleteMeetingApplication","POST",data,true,resp => {
+          if(resp.rows==1){
+            this.$message({
+              message: '删除成功',
+              type: 'success',
+              duration: 1200
+            });
+            this.searchHandle()
+          }
+          else{
+            this.$message({
+              message: '删除失败',
+              type: 'error',
+              duration: 1200
+            });
+          }
+        })
+      })
     },
 
     changeHandle(){//选择我的会议或全部会议
       this.searchHandle();
     },
 
-/*		backHandle: function() {
-			let that = this;
-			that.mode = 'gantt';
+/*		backHandle() {
+			this.mode = 'gantt';
 		},*/
     addHandle() {//新增线下会议申请
       this.addVisible = true;
@@ -225,31 +290,33 @@ export default {
       this.pageIndex = val;
       this.loadDataList();
     },
+    refresh() {
+      this.mode="gantt"
+      this.$refs["dataForm"].resetFields()
+      this.loadDataList()
+    }
 	},
 	mounted() {
-		let that=this
 		//根据实际情况设置甘特图每个单元格应该有的宽度
-		let rowWidth = that.$refs['gantt'].offsetWidth - 1;
+		let rowWidth = this.$refs['gantt'].offsetWidth - 1;
 		let cellWidth = rowWidth * 0.042 + 0.01;
-		that.gantt.cellWidth = cellWidth;
+		this.gantt.cellWidth = cellWidth;
 
 		//当浏览器窗口尺寸改变的时候，重新设置甘特图单元格的宽度
 		window.addEventListener('resize', () => {
-			let rowWidth = that.$refs['gantt'].offsetWidth - 1;
+			let rowWidth = this.$refs['gantt'].offsetWidth - 1;
 			let cellWidth = rowWidth * 0.042 + 0.01;
-			that.gantt.cellWidth = cellWidth;
+			this.gantt.cellWidth = cellWidth;
 		})
 	},
 	created() {
-		
-		let that = this;	
 		//加载会议室列表
-		that.$http('meeting_room/searchAllMeetingRoom', 'GET', null, true, function(resp) {
-			that.roomList = resp.list;
+		this.$http('meeting_room/searchAllMeetingRoom', 'GET', null, true, resp => {
+			this.roomList = resp.list;
 		});
 
 		//加载分页数据
-		that.loadDataList();
+		this.loadDataList();
 	}
 };
 </script>

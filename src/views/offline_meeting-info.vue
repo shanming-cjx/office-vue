@@ -78,38 +78,37 @@ export default {
 	},
 	methods: {
 		init: function(id, status) {
-			let that = this;
-			that.visible = true;
-			that.$nextTick(() => {
+			this.visible = true;
+			this.$nextTick(() => {
 				let data = {
 					id: id,
 					status: status
 				};
-				that.$http('meeting/searchMeetingInfo', 'POST', data, true, function(resp) {
+				this.$http('meeting/searchMeetingInfo', 'POST', data, true, resp => {
 					console.log(resp.data);
-					that.title = resp.title;
-					that.date = resp.date;
-					that.place = resp.place;
-					that.start = resp.start;
-					that.end = resp.end;
+					this.title = resp.title;
+					this.date = resp.date;
+					this.place = resp.place;
+					this.start = resp.start;
+					this.end = resp.end;
 
 					if (resp.status == 1) {
-						that.status = '待审批';
+						this.status = '待审批';
 					} else if (resp.status == 3) {
-						that.status = '未开始';
+						this.status = '未开始';
 					} else if (resp.status == 4) {
-						that.status = '进行中';
+						this.status = '进行中';
 					} else if (resp.status == 5) {
-						that.status = '已结束';
+						this.status = '已结束';
 					}
 					if (resp.hasOwnProperty('members')) {
-						that.members = JSON.parse(resp.members);
+						this.members = JSON.parse(resp.members);
 					}
 					if (resp.hasOwnProperty('present')) {
-						that.present = JSON.parse(resp.present);
+						this.present = JSON.parse(resp.present);
 					}
 					if (resp.hasOwnProperty('unpresent')) {
-						that.unpresent = JSON.parse(resp.unpresent);
+						this.unpresent = JSON.parse(resp.unpresent);
 					}
 				});
 			});

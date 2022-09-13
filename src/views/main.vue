@@ -402,11 +402,8 @@ export default {
   mounted() {
     //加载用户数据
     this.$http('user/loadUserInfo', 'GET', null, true, resp => {
-      let json = resp;
-      let name = json.name;
-      let photo = json.photo;
-      this.name = name;
-      this.photo = photo;
+      this.name = resp.name;
+      this.photo = resp.photo;
     });
 
     this.resetDocumentClientHeight();

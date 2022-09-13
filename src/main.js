@@ -115,7 +115,7 @@ app.config.globalProperties.$http = function(url, method, data, async, fun) {
 				})
 			}else{
 				ElMessage.error({
-					message: resp.msg,
+					message: resp.error,
 					duration: 1200
 				});
 			}
