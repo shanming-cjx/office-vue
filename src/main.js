@@ -108,8 +108,12 @@ app.config.globalProperties.$http = function(url, method, data, async, fun) {
 		data: JSON.stringify(data),
 		success: function(resp) {
 			if (resp.code == 200) {
-				fun(resp)
-			} else {
+					fun(resp)
+			}else if(resp.code == 401){
+				router.push({
+					name: 'Login'
+				})
+			}else{
 				ElMessage.error({
 					message: resp.msg,
 					duration: 1200
